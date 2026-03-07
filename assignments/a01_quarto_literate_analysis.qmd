@@ -17,6 +17,8 @@ Source: <https://learning.nceas.ucsb.edu/2024-10-coreR/session_05.html>
 
 ## About the data
 
+The Redfield ratio refers to the carbon / nitrogen / phosphorous ratio found in phytoplankton across the oceans, which is 106:16:1 (or simply, 16:1). The ratio is considered an important baseline for healthy ocean life. Scientists can use the ratio to track changes in the ocean by assessing any variances in this ratio.\
+\
 The seawater chemistry dataset used here is `BGchem2008data.csv` (downloaded previously in the course).
 
 -   Date downloaded: August 8, 2025
@@ -40,7 +42,7 @@ Quarto runs R in the same way as a script: objects only exist after the chunks t
 Using `here()` is a convenient way to build paths relative to your project root (e.g., your `.qmd` might live in `scripts/` while data lives in `data/`).
 
 ```{r}
-bg_chem <- read_csv(here::here("data", "BGchem2008data.csv"))
+bg_chem <- read_csv(file = "../Data/RAW/BGchem2008data.csv") 
 ```
 
 (Optional) Quick peek at the data:
@@ -92,6 +94,8 @@ plot(
   main = "Ocean water samples: total N vs P"
 )
 ```
+
+The plot above displays the relationship between phosphate and total nitrogen concentration in ocean water samples. The concentration shows a linear correlation between phosphate and total nitrogen. There is a cluster of points that show when total nitrogen concentration is about 13, phosphate ranges from 0.8 to 1.1.
 
 # Conclusion
 
