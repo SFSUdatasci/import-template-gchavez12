@@ -1,0 +1,71 @@
+---
+title: "a03"
+author: Gabriella Chavez
+format: html
+
+---
+
+## Introduction
+
+Commercial salmon catch data are useful because they can show differences across regions in Alaska and can help show patterns in fisheries over time. In this analysis, I will clean the data and reorganize it so I can calculate the mean catch by region and compare which regions tend to have the highest and lowest average catches.
+
+## Data
+
+The data for this assignment comes from the Alaska commercial salmon catch dataset available through the KNB public archive. I downloaded the data in R from the provided URL on March 29, 2026.
+
+```{r}
+#| message: false
+#| warning: false
+
+
+library(dplyr)
+library(tidyr)
+library(readr)
+```
+
+
+```{r}
+catch_original <- read_csv("https://knb.ecoinformatics.org/knb/d1/mn/v2/object/df35b.302.1")
+```
+
+
+```{r}
+colnames(catch_original)  ## This shows the column names in the dataset
+
+head(catch_original)     ## This shows the first rows of the dataset 
+
+summary(catch_original)   ## This shows a summary of each column 
+```
+
+## Analysis
+
+```{r}
+mean_region <- catch_original %>% ## This creates a new object called mean_region to store the cleaned and summarized data
+  
+  select(-All, -notesRegCode) %>% ## This removes the columns we don't need for this analysis
+  
+  mutate(Chinook = if_else(Chinook == "I", "1", Chinook)) %>% ## This replaces the chinook value of I with 1. 
+  
+  mutate(Chinook = as.numeric(Chinook)) %>% ## This converts the chinook column to numeric values
+  
+  ## This changes the shape of the data from a wide format to a long format.
+  pivot_longer(
+    -c(Region, Year),
+    names_to = "species",
+    values_to = "catch"
+  ) %>%
+  
+  mutate(catch = catch * 1000) %>%  ## This converts catch values from thousands of fish to individual fish
+  
+  group_by(Region) %>%  ## This groups the data by region 
+  
+  summarize(mean_catch = mean(catch)) %>%  ## This calculates the mean catch for each region 
+  
+  arrange(desc(mean_catch)) ## This sorts the regions from highest to lowest mean catch 
+
+mean_region
+```
+
+## Discussion 
+
+The results show that average salmon catch differs a lot accross regions. SSE has the highest mean catch, while regions like BER and KTZ have much lower mean catches. This shows that salmon catch is unevenly distributed across Alaska, and only a few regions have a much larger average catch than most of the other regions. 
