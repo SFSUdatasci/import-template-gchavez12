@@ -1,0 +1,63 @@
+---
+title: "a02"
+format: html
+---
+
+# Introduction
+
+## About the data
+
+This dataset contains information on bee species richness across three sites: North, Central, and South. For each observation, the dataset records the site name, species richness (number of bee species observed), latitude, and temperature. These variables allow us to examine how bee diversity varies among locations and how environmental factors, such as temperature, may be associated with species richness.
+
+The bee diversity dataset used in this analysis is bee_data.csv, which was downloaded earlier in the course.
+
+The goal of this analysis is to explore differences in bee richness among sites and investigate whether temperature is related to patterns in species diversity.
+
+## Setup
+
+Best practice: put all `library()` calls in one chunk near the top so collaborators can see what packages are required.
+
+```{r}
+library(here)
+library(readr)
+```
+
+# Read in the data
+
+Quarto runs R in the same way as a script: objects only exist after the chunks that create them have been run.
+
+Using `here()` is a convenient way to build paths relative to your project root (e.g., your `.qmd` might live in `scripts/` while data lives in `data/`).
+
+(Optional) Quick peek at the data:
+
+# Data
+
+```{r}
+#| label: Loading in the Data
+
+# Load packages
+library(readr)
+library(tidyverse)
+library(here)
+
+# Import data
+bee_data <- read_csv("../Data/RAW/bee_data.csv")
+
+# View data
+head(bee_data)
+glimpse(bee_data)
+```
+
+```{r}
+
+ names(bee_data)
+
+```
+
+# Analysis
+
+The data is tidy.
+
+# Conclusion
+
+The data is tidy. It was important to make sure the data is being loaded in from the correct folder, or that Rstudio knows where to find it.
