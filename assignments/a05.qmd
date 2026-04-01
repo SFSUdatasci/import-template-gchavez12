@@ -1,0 +1,156 @@
+---
+title: "a05"
+format: html
+author: "Gabriella Chavez"
+date: April 01, 2026 
+---
+
+## Introduction
+
+This report explores socioecological monitoring data from the Sacramento-San Joaquin Delta. The goal is to visualize patterns in visitor activity across restoration locations and to map where those locations are found. A plot and a map help summarize both the amount of visitation and the spatial distribution of the monitored sites.
+
+## Data
+
+The data for this assignment comes from the Sacramento-San Joaquin Delta Socioecological Monitoring dataset. The file used in this report is `Socioecological_monitoring_data.csv`, saved in the `data/RAW` folder of the project.
+
+```{r}
+#| message: false
+#| warning: false
+
+### This loads packages needed for reading, plotting, tables, and mapping
+library(readr)
+library(dplyr)
+library(tidyr)
+library(forcats)
+library(ggplot2)
+library(leaflet)
+library(DT)
+library(scales)
+library(janitor)
+library(viridis)
+library(here)
+
+### This reads the raw dataset from the data folder into R
+delta_visits_raw <- read_csv(here("data/RAW/Socioecological_monitoring_data.csv"), show_col_types = FALSE)
+
+### This cleans the column names so they are all lowercase and consistent
+delta_visits <- delta_visits_raw %>%
+  clean_names()
+
+### This reshapes the data from wide format to long format so visitor types are in one column
+visits_long <- delta_visits %>%
+  pivot_longer(
+    cols = c(sm_boat, med_boat, lrg_boat, bank_angler, scientist, cars),
+    names_to = "visitor_type",
+    values_to = "quantity"
+  ) %>%
+  
+  ### This renames the location column to make it shorter and easier to use
+  rename(restore_loc = eco_restore_approximate_location) %>%
+  
+  ### This remove the notes column because it is not needed for this analysis
+  select(-notes)
+```
+
+## Analysis 
+
+```{r}
+### This grousp the data by restoration location, date, and visitor type
+daily_visits_loc <- visits_long %>%
+  group_by(restore_loc, date, visitor_type) %>%
+  
+  ### This calculates the total number of visits for each location, date, and visitor type
+  summarize(daily_visits = sum(quantity), .groups = "drop")
+
+### This groups the summarized data by restoration location
+daily_visits_totals <- daily_visits_loc %>%
+  group_by(restore_loc) %>%
+  
+  ### This creates a total number of visits for each restoration location
+  mutate(n = sum(daily_visits)) %>%
+  
+  ### This removes grouping so later steps are easier to control
+  ungroup() %>%
+  
+  ### This reorders the restoration locations by total visits
+  mutate(restore_loc = fct_reorder(restore_loc, n))
+
+### This creates a reusable theme object with a white background and larger text
+my_theme <- theme_bw(base_size = 14) +
+  
+  ### This moves the legend to the bottom and remove y-axis tick marks
+  theme(
+    legend.position = "bottom",
+    axis.ticks.y = element_blank()
+  )
+
+### This creates a bar plot showing daily visits by restoration location and visitor type
+visit_plot <- ggplot(
+  data = daily_visits_totals,
+  aes(x = daily_visits, y = restore_loc, fill = visitor_type)
+) +
+  
+  ### This draws bars whose lengths represent the number of visits
+  geom_col() +
+  
+  ### This applies a colorblind-friendly color palette
+  scale_fill_viridis_d() +
+  
+  ### This labels the axes, legend, title, and subtitle
+  labs(
+    x = "Number of Visits",
+    y = "Restoration Location",
+    fill = "Visitor Type",
+    title = "Visits to Delta Restoration Areas by Visitor Type",
+    subtitle = "Summed across the study period"
+  ) +
+  
+  ### This sets x-axis tick marks and remove the gap between bars and the axis
+  scale_x_continuous(breaks = seq(0, 120, 20), expand = c(0, 0)) +
+  
+  ### This applies the custom theme to improve readability
+  my_theme
+
+### This displays the plot
+visit_plot
+
+### This keeps one row for each unique restoration location
+locations <- visits_long %>%
+  distinct(restore_loc, .keep_all = TRUE) %>%
+  
+  ### This keep only the columns needed for mapping
+  select(restore_loc, latitude, longitude)
+
+
+### This creates an interactive map centered on the restoration locations
+visit_map <- leaflet(locations) %>%
+  
+  ### This adds a satellite-style base map
+  addProviderTiles(providers$Esri.WorldImagery) %>%
+  
+  ### This adds label tiles on top of the imagery
+  addProviderTiles(providers$CartoDB.PositronOnlyLabels) %>%
+  
+  ### This adds circular markers at each restoration location
+  addCircleMarkers(
+    lng = ~ longitude,
+    lat = ~ latitude,
+    popup = ~ restore_loc,
+    radius = 5,
+    fillColor = "salmon",
+    fillOpacity = 1,
+    stroke = TRUE,
+    weight = 0.5,
+    color = "white",
+    opacity = 1
+  )
+
+### This finally displays the map
+visit_map
+```
+
+## Discussion
+
+The bar plot shows that visitation differs across restoration locations and also varies by visitor type. The map adds useful spatial context by showing where the monitored locations are distributed across the Delta. Together, these visuals make the data easier to interpret than the raw table one because they show both the amount of visitation and the geographic patterns of the sites. 
+
+```{r}
