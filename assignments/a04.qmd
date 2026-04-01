@@ -1,0 +1,86 @@
+---
+title: "a04"
+format: html
+author: Gabriella Chavez
+---
+
+## Introduction
+
+This analysis uses bird survey data from parks in the central Arizona-Phoenix metropolitan area. The goal is to join the bird observations with the related site, survey, and taxonomic information, then use the survey dates to find the total number of birds observed by park and month.
+
+## Data
+
+The data for this assignment comes from the EDI Data Portal dataset on bird surveys in urban parks in the central Arizona-Phoenix metropolitan area. The files used are `52_pp52_birds_1.csv`, `52_pp52_surveys_1.csv`, `52_pp52_sites_1.csv`, and `52_pp52_taxalist_1.csv`. 
+
+```{r}
+#| message: false
+#| warning: false
+
+## This loads packages needed for reading, joining, and wrangling the data
+library(readr)
+library(dplyr)
+library(here)
+library(lubridate)
+```
+
+
+```{r}
+## This reads in the four data files from the data folder
+bird_observations <- read_csv(here("data/RAW/52_pp52_birds_1.csv"), show_col_types = FALSE)
+surveys <- read_csv(here("data/RAW/52_pp52_surveys_1.csv"), show_col_types = FALSE)
+sites <- read_csv(here("data/RAW/52_pp52_sites_1.csv"), show_col_types = FALSE)
+taxalist <- read_csv(here("data/RAW/52_pp52_taxalist_1.csv"), show_col_types = FALSE)
+```
+
+
+```{r}
+## This previews the structure of each data frame
+glimpse(bird_observations)
+glimpse(surveys)
+glimpse(sites)
+glimpse(taxalist)
+```
+
+## Analysis 
+```{r}
+## This renames the notes column in bird_observations so it does not conflict with notes in surveys
+bird_observations <- bird_observations %>%
+  rename(bird_obs_notes = notes)
+
+## This joins bird observations to the taxalist, sites, and surveys tables, then keeps only the columns needed for this analysis
+bird_obs_subset <- bird_observations %>%
+  left_join(taxalist, by = "species_id") %>%
+  left_join(sites, by = "site_id") %>%
+  left_join(surveys, by = c("site_id", "survey_id")) %>%
+  select(survey_date, common_name, park_name, bird_count, observer)
+
+## This standardizes the observer name so all names follow the same format
+bird_obs_subset <- bird_obs_subset %>%
+  mutate(observer = if_else(observer == "Josh Burns", "J. Burns", observer))
+
+## This creates a new column with the survey month number, then converts the month number to a factor
+## Then it moves survey_month so it appears right after survey_date
+bird_obs_subset <- bird_obs_subset %>%
+  mutate(survey_month = factor(month(survey_date))) %>%
+  relocate(survey_month, .after = survey_date)
+
+# This filters to only the four parks listed in the assignment
+bird_parks <- bird_obs_subset %>%
+  filter(park_name %in% c("Lindo", "Orme", "Palomino", "Sonrisa"))
+
+# This groups the filtered data by park and month, then calculates the total number of birds observed in each group
+birds_by_park_month <- bird_parks %>%
+  group_by(park_name, survey_month) %>%
+  summarize(total_birds = sum(bird_count, na.rm = TRUE), .groups = "drop") %>%
+  arrange(park_name, survey_month)
+
+birds_by_park_month
+```
+
+
+## Summary 
+
+This final table shows the total number of birds observed for each month in Londo, Orme, Palomino, and Sonrisa parks. This output is useful because it ummarizes bird observations in a way that makes the comparison between park by month much easier. One improvement would be to change the month numbers to month names in the final table so it is easier to read. 
+
+
+```{r}
