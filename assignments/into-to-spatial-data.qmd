@@ -1,12 +1,8 @@
 ---
-title: "into-to-spatial-data"
+title: "Intro to Spatial Data in R"
 format: html
 ---
 
-```{r}
-install.packages("ggspatial")
-install.packages("prettymapr")
-```
 
 ```{r}
 library(readr)
