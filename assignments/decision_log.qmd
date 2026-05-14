@@ -1,0 +1,22 @@
+---
+title: "Decision Log"
+format: html
+---
+
+## Decision 1: Using Alaska Albers for spatial analysis
+
+I used **EPSG:3338, Alaska Albers**, for the spatial join because it is designed for mapping Alaska. The original population points were in EPSG:4326, which uses latitude and longitude. While EPSG:4326 is useful for storing geographic coordinates, projected coordinate systems like EPSG:3338 are better for spatial analysis and mapping within Alaska.
+
+This helped make the population points and Alaska region polygons use the same coordinate reference system before running `st_join()`.
+
+## Decision 2: Using `st_within` for the spatial join
+
+I used `st_within` in the spatial join because I wanted each population point to be assigned to the region polygon that contains it.
+
+If I used `st_intersects`, the result could include features that only touch or overlap in some way. For point-in-polygon data, `st_within` is more specific because it checks whether each city point falls inside a region.
+
+## Decision 3: Using a ggspatial basemap
+
+I tried adding an OpenStreetMap basemap with `ggspatial::annotation_map_tile()`. The basemap gives helpful geographic context, especially for viewers unfamiliar with Alaska.
+
+However, it also adds visual clutter and requires extra packages like `prettymapr`. For a clean thematic map of population by region, the basemap may not be necessary.
