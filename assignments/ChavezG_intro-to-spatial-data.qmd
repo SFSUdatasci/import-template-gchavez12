@@ -1,6 +1,7 @@
 ---
 title: "Intro to Spatial Data in R"
 format: html
+author: Gabriella Chavez
 ---
 
 
